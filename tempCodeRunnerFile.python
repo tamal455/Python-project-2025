@@ -1,0 +1,78 @@
+import cv2
+import time
+import torch
+
+
+
+# Video path
+video_path = r"D:\Python project@2025\myvenv\4K Road traffic video for object detection and tracking - free download now!.mp4"
+vidCap = cv2.VideoCapture(video_path)
+
+# Create background subtractor
+fgbg = cv2.createBackgroundSubtractorMOG2(history=100, varThreshold=40)
+
+if not vidCap.isOpened():
+    print("Error: Could not open video.")
+else:
+    width  = int(vidCap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidCap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    # Reference line at 80% height
+    line_y = int(height * 0.8)
+
+    vehicle_count = 0
+    detected_centers = set()  # Keep track of counted objects
+
+    while True:
+        ret, frame = vidCap.read()
+        if not ret:
+            print("End of video or cannot fetch frame.")
+            break
+
+        # Background subtraction
+        fgmask = fgbg.apply(frame)
+
+        # Remove noise
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)
+        fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_CLOSE, kernel)
+
+        # Find contours
+        contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cnt in contours:
+            # Ignore small objects
+            if cv2.contourArea(cnt) < 500:
+                continue
+
+            x, y, w, h = cv2.boundingRect(cnt)
+            cx = x + w // 2
+            cy = y + h // 2
+
+            # Draw bounding box
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.circle(frame, (cx, cy), 4, (255, 0, 0), -1)
+
+            # Count vehicle if it crosses the line
+            if (cy > line_y - 5) and (cy < line_y + 5) and (cx, cy) not in detected_centers:
+                vehicle_count += 1
+                detected_centers.add((cx, cy))
+
+        # Draw reference line
+        cv2.line(frame, (0, line_y), (width, line_y), (0, 0, 255), 2)
+
+        # Display count
+        cv2.putText(frame, f"Count: {vehicle_count}", (20, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+
+        # Show frame
+        cv2.imshow("Vehicle Counter", frame)
+
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            break
+
+vidCap.release()
+cv2.destroyAllWindows()
+
+
+
