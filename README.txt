@@ -23,7 +23,7 @@ pip (Python package manager)
 
 Git (optional, for cloning the repo)
 
-
+===============================================Steps:-=================================
 Create a virtual environment (recommended)
 python -m venv venv
 
@@ -69,4 +69,6 @@ AND CSV File Exported will be saved in-side the project folder file name (vehicl
 
 Sample Video inside Python project@2025\myvenv
 file name 4K Road traffic video for object detection and tracking - free download now!(1).mp4
+put this file inside the folder called myvenv . then run the Traffic_Flow_Analysis.py script
+
 
